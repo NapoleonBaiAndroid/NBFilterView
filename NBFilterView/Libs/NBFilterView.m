@@ -8,16 +8,15 @@
 
 #import "NBFilterView.h"
 
-#define TAG_OF_TITLEBUTTON 1000
-#define TAG_OF_SUBTITLEBUTTON 2000
-
 @interface NBFilterView()
-@property(nonatomic,strong)UIView *currentSelectedButton;
+
 @property(nonatomic,weak)UIWindow *keyWindow;
 @property(nonatomic,strong)UIView *childView;
 
 @property(nonatomic,assign)UIEdgeInsets paddingOfSubTitleView;//子View间距
 @property(nonatomic,assign)NSUInteger numberOfColumnsInRow;//每行显示多少个
+
+@property(nonatomic,assign)NBIndexPath currentSelectedIndex;//当前选中项
 
 @end
 
@@ -39,6 +38,8 @@
 - (void)initData{
     //设置默认行高
     self.rowHeight = 44;
+    //默认不选中任何一个
+    _currentSelectedIndex.section = -1;
 }
 
 - (UIEdgeInsets)paddingOfSubTitleView{
@@ -61,7 +62,7 @@
 
 
 - (NSInteger)getCurrentSection{
-    return self.currentSelectedButton.tag - TAG_OF_TITLEBUTTON;
+    return self.currentSelectedIndex.section;
 }
 
 - (UIWindow *)keyWindow{
@@ -72,12 +73,13 @@
 }
 
 - (void)showSectionTitles{
+    [self.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
     if (self.datasource) {
         float sectionsCount = [self.datasource numberOfSectionsForfilterView:self] * 1.0f;
         float buttonWidth = self.bounds.size.width / sectionsCount;
         for (int i = 0;i<sectionsCount ;i++) {
-            UIView *headerView = [self.datasource filterView:self viewOfSection:i];
-            headerView.tag = i+TAG_OF_TITLEBUTTON;
+            NBFilterCell *headerView = [self.datasource filterView:self viewOfSection:i];
+            headerView.sectionPosition = i;
             headerView.frame = CGRectMake(i*buttonWidth, 0, buttonWidth, self.bounds.size.height);
             [self addSubview:headerView];
             [headerView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(clickTitles:)]];
@@ -95,35 +97,48 @@
 }
 
 - (void)clickTitles:(UITapGestureRecognizer *)tap{
-    //这里的逻辑需要更改
-    if (self.currentSelectedButton == tap.view) {
+    NSInteger section = ((NBFilterCell *)tap.view).sectionPosition;
+    //如果当前section已经被选中
+    if (_currentSelectedIndex.section == section) {
         return;
     }
-    if (self.currentSelectedButton) {
-        ((UIButton *)self.currentSelectedButton).selected = NO;
+    //设置当前选中的section
+    _currentSelectedIndex.section = section;
+    
+    if (self.delegate) {
+        [self.delegate filterView:self didSelectedSection:section];
     }
-    ((UIButton *)tap.view).selected = !((UIButton *)tap.view).isSelected;
-    if (((UIButton *)tap.view).isSelected) {
-        self.currentSelectedButton = tap.view;
-    }
-    [self showChildView:[self.datasource filterView:self numberInSection:self.currentSelectedButton.tag - TAG_OF_TITLEBUTTON]];
+    
+    //显示该分组下面的数据
+    [self showChildView:[self.datasource filterView:self numberInSection:_currentSelectedIndex.section]];
 }
 
 - (void)clickSubTitles:(UITapGestureRecognizer *)tap{
     if (self.delegate) {
-        NBIndexPath indexPath;
-        indexPath.section = self.currentSelectedButton.tag - TAG_OF_TITLEBUTTON;
-        indexPath.row = tap.view.tag - TAG_OF_SUBTITLEBUTTON;
-        [self.delegate filterView:self didSelectedRowOfIndexPath:indexPath];
+        //设置当前选中的数据(分组下面特定的)
+        _currentSelectedIndex.row = ((NBFilterCell *)tap.view).rowPosition;
+        //回执界面
+        [self.delegate filterView:self didSelectedRowOfIndexPath:_currentSelectedIndex];
     }
 }
 
+- (NBIndexPath)indexPathForCell:(NBFilterCell *)cell{
+    NBIndexPath indexPath;
+    indexPath.section = cell.sectionPosition;
+    indexPath.row = cell.rowPosition;
+    return indexPath;
+}
 
+/**
+ *  显示分组下的数据
+ *
+ *  @param numberOfSection 每个分组有多少个数据
+ */
 - (void)showChildView:(NSInteger)numberOfSection{
     [self.childView.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
     if (!self.childView) {
         CGRect rect=[self convertRect: self.bounds toView:self.keyWindow];
-        self.childView = [[UIView alloc] initWithFrame:CGRectMake(0, rect.origin.y + rect.size.height, rect.size.width, ceilf(numberOfSection / (self.numberOfColumnsInRow / 1.0)) *50)];
+        self.childView = [[UIView alloc] initWithFrame:CGRectMake(0, rect.origin.y + rect.size.height, rect.size.width, ceilf(numberOfSection / (self.numberOfColumnsInRow / 1.0)) *(self.rowHeight + self.paddingOfSubTitleView.top + self.paddingOfSubTitleView.bottom))];
         self.childView.backgroundColor = [UIColor greenColor];
         [self.keyWindow addSubview:self.childView];
     }
@@ -137,15 +152,16 @@
     //得到每个控件宽度
     float buttonWidth = (self.childView.bounds.size.width - self.numberOfColumnsInRow*(self.paddingOfSubTitleView.left + self.paddingOfSubTitleView.right)) / self.numberOfColumnsInRow;
     for (int i = 0;i<numberOfSection ;i++) {
-        
         NBIndexPath indexPath;
-        indexPath.section = self.currentSelectedButton.tag - TAG_OF_TITLEBUTTON;
+        indexPath.section = _currentSelectedIndex.section;
         indexPath.row = i;
-        UIView *view = [self.datasource filterView:self viewForRowAtIndexPath:indexPath];
-        view.tag = i + TAG_OF_SUBTITLEBUTTON;
-        view.frame = CGRectMake(self.paddingOfSubTitleView.left + i%self.numberOfColumnsInRow*(buttonWidth+self.paddingOfSubTitleView.left+self.paddingOfSubTitleView.right),self.paddingOfSubTitleView.top + i/self.numberOfColumnsInRow * (self.rowHeight+self.paddingOfSubTitleView.bottom+self.paddingOfSubTitleView.top), buttonWidth, self.rowHeight);
-        [self.childView addSubview:view];
-        [view addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(clickSubTitles:)]];
+        NBFilterCell *filterCell = [self.datasource filterView:self viewForRowAtIndexPath:indexPath];
+        filterCell.rowPosition = i;
+        filterCell.sectionPosition = _currentSelectedIndex.section;
+        
+        filterCell.frame = CGRectMake(self.paddingOfSubTitleView.left + i%self.numberOfColumnsInRow*(buttonWidth+self.paddingOfSubTitleView.left+self.paddingOfSubTitleView.right),self.paddingOfSubTitleView.top + i/self.numberOfColumnsInRow * (self.rowHeight+self.paddingOfSubTitleView.bottom+self.paddingOfSubTitleView.top), buttonWidth, self.rowHeight);
+        [self.childView addSubview:filterCell];
+        [filterCell addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(clickSubTitles:)]];
     }
 }
 

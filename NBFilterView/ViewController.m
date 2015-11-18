@@ -10,10 +10,12 @@
 
 #import "NBFilterModel.h"
 #import "NBFilterView.h"
+#import "SectionTitleView.h"
 
 
 @interface ViewController ()<NBFilterViewDataSource,NBFilterViewDelegate>{
     NSArray *dataArray;
+    NSInteger currentSelectSection;
 }
 
 @end
@@ -22,6 +24,8 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    currentSelectSection = -1;
+    
     dataArray = @[[[NBFilterModel alloc] initName:@"人物" withId:@"adsfadf" defaultImage:@"icon_down" selectedImage:@"icon_up" tag:0 childArray:@[[[NBFilterModel alloc] initName:@"小明" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"小华" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"小花" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"小红" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"小天" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"凤姐" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"犀利哥" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"小马" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil]]],[[NBFilterModel alloc] initName:@"距离" withId:@"adsfadf" defaultImage:@"icon_down" selectedImage:@"icon_up" tag:0 childArray:@[[[NBFilterModel alloc] initName:@"1000" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"2000" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"3000" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"4000" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil]]],[[NBFilterModel alloc] initName:@"类型" withId:@"adsfadf" defaultImage:@"icon_down" selectedImage:@"icon_up" tag:0 childArray:@[[[NBFilterModel alloc] initName:@"玫瑰" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"百合" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"配花" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"包装纸" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil]]]];
     
     NBFilterView *filterView = [[NBFilterView alloc] initWithFrame:CGRectMake(0, 100, [UIScreen mainScreen].bounds.size.width, 50)];
@@ -49,25 +53,42 @@
     return UIEdgeInsetsMake(5, 5, 5, 5);
 }
 
-- (UIView *)filterView:(NBFilterView *)filterView viewOfSection:(NSInteger)section{
+- (NBFilterCell *)filterView:(NBFilterView *)filterView viewOfSection:(NSInteger)section{
+    NBFilterCell *filterCell = [NBFilterCell new];
     NBFilterModel *filterModel = dataArray[section];
     
-    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
-    button.showsTouchWhenHighlighted = YES;
+    SectionTitleView *titleView = [SectionTitleView new];
+    titleView.titleLable.text = filterModel.fName;
+    if (filterModel.isSelected) {
+        titleView.detailImageView.image = [UIImage imageNamed:filterModel.fSelectedDetailImage];
+    }else{
+        titleView.detailImageView.image = [UIImage imageNamed:filterModel.fDefaultDetailImage];
+    }
+    [filterCell addSubview:titleView];
+
+    NSDictionary *views = NSDictionaryOfVariableBindings(titleView);
+    titleView.translatesAutoresizingMaskIntoConstraints = NO;
     
-    [button setImage:[UIImage imageNamed:filterModel.fSelectedDetailImage] forState:UIControlStateSelected];
-    [button setImage:[UIImage imageNamed:filterModel.fDefaultDetailImage] forState:UIControlStateNormal];
-    //这样可以设置无论是否选中状态,高亮图片都是同一张
-    [button setImage:[UIImage imageNamed:filterModel.fSelectedDetailImage] forState:(UIControlStateHighlighted|UIControlStateSelected)];
-    
-    [button setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
-    [button setTitle:filterModel.fName forState:UIControlStateNormal];
-    
-    return button;
+    [filterCell addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|-0-[titleView]-0-|" options:0 metrics:nil views:views]];
+    [filterCell addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-0-[titleView]-0-|" options:0 metrics:nil views:views]];
+    return filterCell;
 }
 
-- (UIView *)filterView:(NBFilterView *)filterView viewForRowAtIndexPath:(NBIndexPath)indexPath{
+- (void)filterView:(NBFilterView *)filterView didSelectedSection:(NSInteger)section{
+    NSLog(@"点击了section === %ld",section);
     
+    NBFilterModel *mModel = dataArray[section];
+    mModel.isSelected = YES;
+    if (currentSelectSection >= 0) {
+        NBFilterModel *mModel = dataArray[currentSelectSection];
+        mModel.isSelected = NO;
+    }
+    currentSelectSection = section;
+    [filterView reloadData];
+}
+
+- (NBFilterCell *)filterView:(NBFilterView *)filterView viewForRowAtIndexPath:(NBIndexPath)indexPath{
+    NBFilterCell *filterCell = [NBFilterCell new];
     NBFilterModel *filterModel = dataArray[indexPath.section];
     NBFilterModel *mModel = filterModel.fChildArray[indexPath.row];
     
@@ -79,12 +100,21 @@
     [button setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
     [button setTitle:mModel.fName forState:UIControlStateNormal];
     button.showsTouchWhenHighlighted = YES;
+    [filterCell addSubview:button];
+    button.enabled = NO;
+    NSDictionary *views = NSDictionaryOfVariableBindings(button);
+    button.translatesAutoresizingMaskIntoConstraints = NO;
     
-    return button;
+    [filterCell addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|-0-[button]-0-|" options:0 metrics:nil views:views]];
+    [filterCell addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-0-[button]-0-|" options:0 metrics:nil views:views]];
+
+    return filterCell;
 }
 
 - (void)filterView:(NBFilterView *)filterView didSelectedRowOfIndexPath:(NBIndexPath)indexPath{
-    NSLog(@"=选中的是第===%ld===行 第=%ld=个",indexPath.section,indexPath.row);
+    NBFilterModel *filterModel = dataArray[indexPath.section];
+    NBFilterModel *mModel = filterModel.fChildArray[indexPath.row];
+    NSLog(@"=选中的是第===%ld===行 第=%ld=个 ,数据是: ===%@",indexPath.section,indexPath.row,mModel.fName);
 }
 
 

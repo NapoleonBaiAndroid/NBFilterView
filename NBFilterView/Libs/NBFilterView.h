@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "NBFilterCell.h"
 
 @protocol NBFilterViewDelegate,NBFilterViewDataSource;
 
@@ -65,6 +66,7 @@ typedef struct {
  */
 @property(nonatomic,assign)float rowHeight;
 
+- (NBIndexPath)indexPathForCell:(NBFilterCell *)cell;
 
 - (void)reloadData;
 
@@ -80,6 +82,14 @@ typedef struct {
  *  @param indexPath  当前选中的视图位置信息
  */
 - (void)filterView:(NBFilterView *)filterView didSelectedRowOfIndexPath:(NBIndexPath)indexPath;
+
+/**
+ *  点击Section执行
+ *
+ *  @param filterView 当前筛选器实例
+ *  @param section    当前选中的section
+ */
+- (void)filterView:(NBFilterView *)filterView didSelectedSection:(NSInteger)section;
 
 @end
 
@@ -154,7 +164,7 @@ typedef struct {
  *
  *  @return 设置视图控件
  */
-- (UIView *)filterView:(NBFilterView *)filterView viewForRowAtIndexPath:(NBIndexPath)indexPath;
+- (NBFilterCell *)filterView:(NBFilterView *)filterView viewForRowAtIndexPath:(NBIndexPath)indexPath;
 
 /**
  *  根据分组信息来获取得到组Title视图
@@ -164,7 +174,7 @@ typedef struct {
  *
  *  @return 组显示的View
  */
-- (UIView *)filterView:(NBFilterView *)filterView viewOfSection:(NSInteger)section;
+- (NBFilterCell *)filterView:(NBFilterView *)filterView viewOfSection:(NSInteger)section;
 
 @end
 

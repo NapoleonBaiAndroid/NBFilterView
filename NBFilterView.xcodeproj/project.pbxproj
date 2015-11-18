@@ -17,6 +17,8 @@
 		441B8BC71BFC4A9D00D8338E /* NBFilterViewUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 441B8BC61BFC4A9D00D8338E /* NBFilterViewUITests.m */; };
 		441B8BD71BFC4AC100D8338E /* NBFilterView.m in Sources */ = {isa = PBXBuildFile; fileRef = 441B8BD61BFC4AC100D8338E /* NBFilterView.m */; };
 		441B8BDC1BFC514B00D8338E /* NBFilterModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 441B8BDB1BFC514B00D8338E /* NBFilterModel.m */; };
+		441B8BE01BFC5C8E00D8338E /* NBFilterCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 441B8BDF1BFC5C8E00D8338E /* NBFilterCell.m */; };
+		441B8BE41BFC7E3E00D8338E /* SectionTitleView.m in Sources */ = {isa = PBXBuildFile; fileRef = 441B8BE31BFC7E3E00D8338E /* SectionTitleView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +59,10 @@
 		441B8BD61BFC4AC100D8338E /* NBFilterView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NBFilterView.m; path = Libs/NBFilterView.m; sourceTree = "<group>"; };
 		441B8BDA1BFC514B00D8338E /* NBFilterModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NBFilterModel.h; sourceTree = "<group>"; };
 		441B8BDB1BFC514B00D8338E /* NBFilterModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NBFilterModel.m; sourceTree = "<group>"; };
+		441B8BDE1BFC5C8E00D8338E /* NBFilterCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NBFilterCell.h; path = Libs/views/NBFilterCell.h; sourceTree = "<group>"; };
+		441B8BDF1BFC5C8E00D8338E /* NBFilterCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NBFilterCell.m; path = Libs/views/NBFilterCell.m; sourceTree = "<group>"; };
+		441B8BE21BFC7E3E00D8338E /* SectionTitleView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SectionTitleView.h; path = views/SectionTitleView.h; sourceTree = "<group>"; };
+		441B8BE31BFC7E3E00D8338E /* SectionTitleView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SectionTitleView.m; path = views/SectionTitleView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -107,6 +113,7 @@
 		441B8BA01BFC4A9C00D8338E /* NBFilterView */ = {
 			isa = PBXGroup;
 			children = (
+				441B8BE11BFC7E1100D8338E /* views */,
 				441B8BD91BFC514B00D8338E /* Models */,
 				441B8BD41BFC4AA700D8338E /* Libs */,
 				441B8BA41BFC4A9D00D8338E /* AppDelegate.h */,
@@ -151,6 +158,7 @@
 		441B8BD41BFC4AA700D8338E /* Libs */ = {
 			isa = PBXGroup;
 			children = (
+				441B8BDD1BFC5C6700D8338E /* views */,
 				441B8BD51BFC4AC100D8338E /* NBFilterView.h */,
 				441B8BD61BFC4AC100D8338E /* NBFilterView.m */,
 			);
@@ -164,6 +172,24 @@
 				441B8BDB1BFC514B00D8338E /* NBFilterModel.m */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		441B8BDD1BFC5C6700D8338E /* views */ = {
+			isa = PBXGroup;
+			children = (
+				441B8BDE1BFC5C8E00D8338E /* NBFilterCell.h */,
+				441B8BDF1BFC5C8E00D8338E /* NBFilterCell.m */,
+			);
+			name = views;
+			sourceTree = "<group>";
+		};
+		441B8BE11BFC7E1100D8338E /* views */ = {
+			isa = PBXGroup;
+			children = (
+				441B8BE21BFC7E3E00D8338E /* SectionTitleView.h */,
+				441B8BE31BFC7E3E00D8338E /* SectionTitleView.m */,
+			);
+			name = views;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -301,6 +327,8 @@
 				441B8BDC1BFC514B00D8338E /* NBFilterModel.m in Sources */,
 				441B8BD71BFC4AC100D8338E /* NBFilterView.m in Sources */,
 				441B8BA31BFC4A9C00D8338E /* main.m in Sources */,
+				441B8BE41BFC7E3E00D8338E /* SectionTitleView.m in Sources */,
+				441B8BE01BFC5C8E00D8338E /* NBFilterCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

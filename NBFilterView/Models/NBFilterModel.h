@@ -16,6 +16,7 @@
 @property(strong,nonatomic) NSString *fDefaultDetailImage;
 @property(strong,nonatomic) NSString *fSelectedDetailImage;
 @property(strong,nonatomic) NSArray *fChildArray;
+@property(assign,nonatomic) BOOL isSelected;
 
 
 - (instancetype)initName:(NSString *)name withId:(NSString *)fId defaultImage:(NSString *)defaultImage selectedImage:(NSString *)selectedImage tag:(NSUInteger)tag childArray:(NSArray *)childArray;
