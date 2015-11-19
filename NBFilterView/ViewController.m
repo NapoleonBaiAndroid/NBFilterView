@@ -118,7 +118,6 @@
     
     [filterCell addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|-0-[button]-0-|" options:0 metrics:nil views:views]];
     [filterCell addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-0-[button]-0-|" options:0 metrics:nil views:views]];
-
     return filterCell;
 }
 

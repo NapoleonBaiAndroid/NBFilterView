@@ -42,6 +42,7 @@
 - (UIControl *)maskView{
     if (!_maskView) {
         _maskView = [UIControl new];
+        _maskView.layer.masksToBounds = YES;
         _maskView.backgroundColor = [UIColor clearColor];
         [_maskView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(touch)]];
     }
@@ -91,11 +92,17 @@
     if (self.delegate) {
         [self.delegate resignFirstResponder:self];
     }
-    _currentSelectedIndex.section = -1;
-    [self.maskView removeFromSuperview];
-    self.maskView = nil;
-    [self.sectionRowView removeFromSuperview];
-    self.sectionRowView = nil;
+    
+    self.sectionRowView.transform = CGAffineTransformMakeTranslation(self.sectionRowView.bounds.origin.x, 0);
+    [UIView animateWithDuration:.3 animations:^{
+        self.sectionRowView.transform = CGAffineTransformMakeTranslation(self.sectionRowView.bounds.origin.x, -self.sectionRowView.bounds.size.height);
+    } completion:^(BOOL finished) {
+        _currentSelectedIndex.section = -1;
+        [self.maskView removeFromSuperview];
+        self.maskView = nil;
+        [self.sectionRowView removeFromSuperview];
+        self.sectionRowView = nil;
+    }];
 }
 
 - (void)showSectionTitles{
@@ -180,6 +187,11 @@
             self.sectionRowView.layer.shadowColor = [UIColor grayColor].CGColor;
             self.sectionRowView.layer.shadowOpacity = .8f;
         }
+        
+        self.sectionRowView.transform = CGAffineTransformMakeTranslation(self.sectionRowView.bounds.origin.x, -self.sectionRowView.bounds.size.height);
+        [UIView animateWithDuration:.3 animations:^{
+              self.sectionRowView.transform = CGAffineTransformMakeTranslation(self.sectionRowView.bounds.origin.x, 0);
+        }];
     }
     
     CGRect frame = self.sectionRowView.frame;
@@ -187,7 +199,6 @@
     if (!self.isScreenWidth) {
         //这里需要设置X坐标
         frame.origin.x = _currentSelectedIndex.section*_sectionViewWidth;
-
         self.sectionRowView.frame = frame;
         if (frame.origin.x > self.bounds.size.width/2) {
             self.sectionRowView.layer.shadowOffset = CGSizeMake(-5, 5);
