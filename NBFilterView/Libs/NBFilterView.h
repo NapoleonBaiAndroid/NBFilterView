@@ -61,14 +61,28 @@ typedef struct {
  */
 @property(nonatomic,assign)FliterFlowLayout flowLayout;
 
+@property(nonatomic,assign)BOOL isScreenWidth;//是否为全屏宽,YES or NO,NO为section宽度
+
 /**
  *  设置行高
  */
 @property(nonatomic,assign)float rowHeight;
 
+/**
+ *  根据Cell获取当前位置
+ *
+ *  @param cell 需要获取位置的cell
+ *
+ *  @return cell的位置
+ */
 - (NBIndexPath)indexPathForCell:(NBFilterCell *)cell;
 
+/**
+ *  刷新数据
+ */
 - (void)reloadData;
+
+//- (void)resignFirstResponder;
 
 @end
 
@@ -90,6 +104,13 @@ typedef struct {
  *  @param section    当前选中的section
  */
 - (void)filterView:(NBFilterView *)filterView didSelectedSection:(NSInteger)section;
+
+/**
+ *  当前筛选器失去焦点
+ *
+ *  @param filterView 当前筛选器实例
+ */
+- (void)resignFirstResponder:(NBFilterView *)filterView;
 
 @end
 

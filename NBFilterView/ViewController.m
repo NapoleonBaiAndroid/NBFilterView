@@ -29,8 +29,10 @@
     dataArray = @[[[NBFilterModel alloc] initName:@"人物" withId:@"adsfadf" defaultImage:@"icon_down" selectedImage:@"icon_up" tag:0 childArray:@[[[NBFilterModel alloc] initName:@"小明" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"小华" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"小花" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"小红" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"小天" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"凤姐" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"犀利哥" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"小马" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil]]],[[NBFilterModel alloc] initName:@"距离" withId:@"adsfadf" defaultImage:@"icon_down" selectedImage:@"icon_up" tag:0 childArray:@[[[NBFilterModel alloc] initName:@"1000" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"2000" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"3000" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"4000" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil]]],[[NBFilterModel alloc] initName:@"类型" withId:@"adsfadf" defaultImage:@"icon_down" selectedImage:@"icon_up" tag:0 childArray:@[[[NBFilterModel alloc] initName:@"玫瑰" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"百合" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"配花" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil],[[NBFilterModel alloc] initName:@"包装纸" withId:@"adsfadf" defaultImage:@"icon_un_agree" selectedImage:@"icon_agree" tag:0 childArray:nil]]]];
     
     NBFilterView *filterView = [[NBFilterView alloc] initWithFrame:CGRectMake(0, 100, [UIScreen mainScreen].bounds.size.width, 50)];
+    filterView.backgroundColor = [UIColor redColor];
     filterView.rowHeight = 40;
     [self.view addSubview:filterView];
+    filterView.isScreenWidth = NO;
     filterView.datasource = self;
     filterView.delegate = self;
 }
@@ -46,7 +48,7 @@
 
 
 - (NSInteger)filterView:(NBFilterView *)filterView numberOfColumnsInSection:(NSInteger)section{
-    return 3;
+    return 1;
 }
 
 - (UIEdgeInsets)filterView:(NBFilterView *)filterView paddingOfColumnsInSection:(NSInteger)section{
@@ -72,6 +74,15 @@
     [filterCell addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|-0-[titleView]-0-|" options:0 metrics:nil views:views]];
     [filterCell addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-0-[titleView]-0-|" options:0 metrics:nil views:views]];
     return filterCell;
+}
+
+- (void)resignFirstResponder:(NBFilterView *)filterView{
+    if (currentSelectSection >= 0) {
+        NBFilterModel *mModel = dataArray[currentSelectSection];
+        mModel.isSelected = NO;
+    }
+    currentSelectSection = -1;
+    [filterView reloadData];
 }
 
 - (void)filterView:(NBFilterView *)filterView didSelectedSection:(NSInteger)section{

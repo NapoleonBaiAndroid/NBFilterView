@@ -23,6 +23,4 @@
  */
 @property(nonatomic,assign)NSInteger rowPosition;
 
-
-
 @end

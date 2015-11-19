@@ -11,12 +11,16 @@
 @interface NBFilterView()
 
 @property(nonatomic,weak)UIWindow *keyWindow;
-@property(nonatomic,strong)UIView *childView;
+@property(nonatomic,strong)UIView *sectionRowView;
+@property(nonatomic,strong)UIControl *maskView;
 
 @property(nonatomic,assign)UIEdgeInsets paddingOfSubTitleView;//子View间距
 @property(nonatomic,assign)NSUInteger numberOfColumnsInRow;//每行显示多少个
 
 @property(nonatomic,assign)NBIndexPath currentSelectedIndex;//当前选中项
+
+
+@property(nonatomic,assign)float sectionViewWidth;//分组视图的宽度
 
 @end
 
@@ -35,7 +39,17 @@
     return self;
 }
 
+- (UIControl *)maskView{
+    if (!_maskView) {
+        _maskView = [UIControl new];
+        _maskView.backgroundColor = [UIColor clearColor];
+        [_maskView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(touch)]];
+    }
+    return _maskView;
+}
+
 - (void)initData{
+    _isScreenWidth = YES;
     //设置默认行高
     self.rowHeight = 44;
     //默认不选中任何一个
@@ -67,22 +81,34 @@
 
 - (UIWindow *)keyWindow{
     if (!_keyWindow) {
+        //_keyWindow = [[[UIApplication sharedApplication] delegate]window];
         _keyWindow = [UIApplication sharedApplication].keyWindow;
     }
     return _keyWindow;
+}
+
+- (void)touch{
+    if (self.delegate) {
+        [self.delegate resignFirstResponder:self];
+    }
+    _currentSelectedIndex.section = -1;
+    [self.maskView removeFromSuperview];
+    self.maskView = nil;
+    [self.sectionRowView removeFromSuperview];
+    self.sectionRowView = nil;
 }
 
 - (void)showSectionTitles{
     [self.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
     if (self.datasource) {
         float sectionsCount = [self.datasource numberOfSectionsForfilterView:self] * 1.0f;
-        float buttonWidth = self.bounds.size.width / sectionsCount;
+        _sectionViewWidth = self.bounds.size.width / sectionsCount;
         for (int i = 0;i<sectionsCount ;i++) {
             NBFilterCell *headerView = [self.datasource filterView:self viewOfSection:i];
             headerView.sectionPosition = i;
-            headerView.frame = CGRectMake(i*buttonWidth, 0, buttonWidth, self.bounds.size.height);
+            headerView.frame = CGRectMake(i*_sectionViewWidth, 0, _sectionViewWidth, self.bounds.size.height);
             [self addSubview:headerView];
-            [headerView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(clickTitles:)]];
+            [headerView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(clickSection:)]];
         }
     }
 }
@@ -96,7 +122,7 @@
     [self showSectionTitles];
 }
 
-- (void)clickTitles:(UITapGestureRecognizer *)tap{
+- (void)clickSection:(UITapGestureRecognizer *)tap{
     NSInteger section = ((NBFilterCell *)tap.view).sectionPosition;
     //如果当前section已经被选中
     if (_currentSelectedIndex.section == section) {
@@ -110,16 +136,17 @@
     }
     
     //显示该分组下面的数据
-    [self showChildView:[self.datasource filterView:self numberInSection:_currentSelectedIndex.section]];
+    [self showsectionRowView:[self.datasource filterView:self numberInSection:_currentSelectedIndex.section]];
 }
 
-- (void)clickSubTitles:(UITapGestureRecognizer *)tap{
+- (void)clickRowCell:(UITapGestureRecognizer *)tap{
     if (self.delegate) {
         //设置当前选中的数据(分组下面特定的)
         _currentSelectedIndex.row = ((NBFilterCell *)tap.view).rowPosition;
         //回执界面
         [self.delegate filterView:self didSelectedRowOfIndexPath:_currentSelectedIndex];
     }
+    [self touch];
 }
 
 - (NBIndexPath)indexPathForCell:(NBFilterCell *)cell{
@@ -134,23 +161,48 @@
  *
  *  @param numberOfSection 每个分组有多少个数据
  */
-- (void)showChildView:(NSInteger)numberOfSection{
-    [self.childView.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
-    if (!self.childView) {
+- (void)showsectionRowView:(NSInteger)numberOfSection{
+    [self.sectionRowView.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    
+    if (!self.sectionRowView) {
+        [self.keyWindow addSubview:self.maskView];
         CGRect rect=[self convertRect: self.bounds toView:self.keyWindow];
-        self.childView = [[UIView alloc] initWithFrame:CGRectMake(0, rect.origin.y + rect.size.height, rect.size.width, ceilf(numberOfSection / (self.numberOfColumnsInRow / 1.0)) *(self.rowHeight + self.paddingOfSubTitleView.top + self.paddingOfSubTitleView.bottom))];
-        self.childView.backgroundColor = [UIColor greenColor];
-        [self.keyWindow addSubview:self.childView];
+        
+        _maskView.frame = CGRectMake(0, rect.origin.y + rect.size.height, self.bounds.size.width, self.keyWindow.bounds.size.height - rect.origin.y - rect.size.height);//[UIScreen mainScreen].bounds;
+
+        self.sectionRowView = [[UIView alloc] initWithFrame:CGRectMake(_isScreenWidth?0:_currentSelectedIndex.section*_sectionViewWidth + self.paddingOfSubTitleView.left, 0,_isScreenWidth?rect.size.width:_sectionViewWidth, ceilf(numberOfSection / (self.numberOfColumnsInRow / 1.0)) *(self.rowHeight + self.paddingOfSubTitleView.top + self.paddingOfSubTitleView.bottom))];
+        [self.sectionRowView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(sectionRowViewTap)]];
+    
+        [self.maskView addSubview:self.sectionRowView];
+        
+        self.sectionRowView.backgroundColor = [UIColor whiteColor];
+        if (!_isScreenWidth) {
+            self.sectionRowView.layer.shadowColor = [UIColor grayColor].CGColor;
+            self.sectionRowView.layer.shadowOpacity = .8f;
+        }
     }
     
-    CGRect frame = self.childView.frame;
+    CGRect frame = self.sectionRowView.frame;
+
+    if (!self.isScreenWidth) {
+        //这里需要设置X坐标
+        frame.origin.x = _currentSelectedIndex.section*_sectionViewWidth;
+
+        self.sectionRowView.frame = frame;
+        if (frame.origin.x > self.bounds.size.width/2) {
+            self.sectionRowView.layer.shadowOffset = CGSizeMake(-5, 5);
+        }else{
+            self.sectionRowView.layer.shadowOffset = CGSizeMake(5, 5);
+        }
+    }
+    
     if (frame.size.height != ceilf(numberOfSection / (self.numberOfColumnsInRow / 1.0)) *(self.rowHeight + self.paddingOfSubTitleView.top + self.paddingOfSubTitleView.bottom)) {
         frame.size.height =  ceilf(numberOfSection / (self.numberOfColumnsInRow / 1.0)) *(self.rowHeight + self.paddingOfSubTitleView.top + self.paddingOfSubTitleView.bottom);
-        self.childView.frame = frame;
+        self.sectionRowView.frame = frame;
     }
     
     //得到每个控件宽度
-    float buttonWidth = (self.childView.bounds.size.width - self.numberOfColumnsInRow*(self.paddingOfSubTitleView.left + self.paddingOfSubTitleView.right)) / self.numberOfColumnsInRow;
+    float buttonWidth = (self.sectionRowView.bounds.size.width - self.numberOfColumnsInRow*(self.paddingOfSubTitleView.left + self.paddingOfSubTitleView.right)) / self.numberOfColumnsInRow;
     for (int i = 0;i<numberOfSection ;i++) {
         NBIndexPath indexPath;
         indexPath.section = _currentSelectedIndex.section;
@@ -160,9 +212,14 @@
         filterCell.sectionPosition = _currentSelectedIndex.section;
         
         filterCell.frame = CGRectMake(self.paddingOfSubTitleView.left + i%self.numberOfColumnsInRow*(buttonWidth+self.paddingOfSubTitleView.left+self.paddingOfSubTitleView.right),self.paddingOfSubTitleView.top + i/self.numberOfColumnsInRow * (self.rowHeight+self.paddingOfSubTitleView.bottom+self.paddingOfSubTitleView.top), buttonWidth, self.rowHeight);
-        [self.childView addSubview:filterCell];
-        [filterCell addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(clickSubTitles:)]];
+        [self.sectionRowView addSubview:filterCell];
+        [filterCell addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(clickRowCell:)]];
     }
+}
+
+- (void)sectionRowViewTap{
+    //暂时不做任何操作
+    return;
 }
 
 @end
